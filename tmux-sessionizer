@@ -7,10 +7,6 @@ switch_to() {
     fi
 }
 
-has_session() {
-    tmux list-sessions | grep -q "^$1:"
-}
-
 hydrate() {
     if [ -f $2/.tmux-sessionizer ]; then
         tmux send-keys -t $1 "source $2/.tmux-sessionizer" c-M
@@ -40,7 +36,9 @@ if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
     exit 0
 fi
 
-if ! has_session $selected_name; then
+# i hate the fact that -t=<target> has different behavior than -t <target>
+# that is unreal
+if ! tmux has-session -t=$selected_name; then
     tmux new-session -ds $selected_name -c $selected
     hydrate $selected_name $selected
 fi
