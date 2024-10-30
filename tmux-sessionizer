@@ -7,6 +7,10 @@ switch_to() {
     fi
 }
 
+has_session() {
+    tmux list-sessions | grep -q "^$1:"
+}
+
 hydrate() {
     if [ -f $2/.tmux-sessionizer ]; then
         tmux send-keys -t $1 "source $2/.tmux-sessionizer" c-M
@@ -20,7 +24,7 @@ if [[ $# -eq 1 ]]; then
 else
     # If someone wants to make this extensible, i'll accept
     # PR
-    selected=$(find ~/personal/dev/env/.config -mindepth 1 -maxdepth 1 -type d | fzf)
+    selected=$(find ~/ ~/personal ~/personal/dev/env/.config -mindepth 1 -maxdepth 1 -type d | fzf)
 fi
 
 if [[ -z $selected ]]; then
@@ -36,9 +40,7 @@ if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
     exit 0
 fi
 
-# i hate the fact that -t=<target> has different behavior than -t <target>
-# that is unreal
-if ! tmux has-session -t=$selected_name; then
+if ! has_session $selected_name; then
     tmux new-session -ds $selected_name -c $selected
     hydrate $selected_name $selected
 fi
