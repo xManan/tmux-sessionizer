@@ -24,7 +24,7 @@ if [[ $# -eq 1 ]]; then
 else
     # If someone wants to make this extensible, i'll accept
     # PR
-    selected=$(find ~/ ~/personal ~/personal/dev/env/.config -mindepth 1 -maxdepth 1 -type d | fzf)
+    selected=$(find ~/ ~/personal ~/personal/projects ~/.config -mindepth 1 -maxdepth 1 -type d | fzf)
 fi
 
 if [[ -z $selected ]]; then
@@ -35,13 +35,21 @@ selected_name=$(basename "$selected" | tr . _)
 tmux_running=$(pgrep tmux)
 
 if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
-    tmux new-session -s $selected_name -c $selected
+    if [ -f $selected/flake.nix ]; then
+        nix develop $selected --command tmux new-session -s $selected_name -c $selected
+    else
+        tmux new-session -s $selected_name -c $selected
+    fi
     hydrate $selected_name $selected
     exit 0
 fi
 
 if ! has_session $selected_name; then
-    tmux new-session -ds $selected_name -c $selected
+    if [ -f $selected/flake.nix ]; then
+        nix develop $selected --command tmux new-session -ds $selected_name -c $selected
+    else
+        tmux new-session -ds $selected_name -c $selected
+    fi
     hydrate $selected_name $selected
 fi
 
